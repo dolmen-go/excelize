@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -645,4 +646,49 @@ func trimSheetName(name string) string {
 		name = string([]rune(name)[0:31])
 	}
 	return name
+}
+
+// SheetViewOption is an option of a view of a worksheet. See SetSheetViewOptions().
+type SheetViewOption interface {
+	applyOption(view *xlsxSheetView)
+}
+
+type (
+	// ShowGridLines is a SheetViewOption.
+	ShowGridLines bool
+	// ShowRowColHeaders is a SheetViewOption.
+	ShowRowColHeaders bool
+)
+
+func (o ShowGridLines) applyOption(view *xlsxSheetView) {
+	b := bool(o)
+	view.ShowGridLines = &b
+}
+
+func (o ShowRowColHeaders) applyOption(view *xlsxSheetView) {
+	b := bool(o)
+	view.ShowRowColHeaders = &b
+}
+
+// SetSheetViewOptions sets a sheet view option.
+//
+// Available options:
+//    ShowGridLines(bool)
+//    ShowRowColHeaders(bool)
+func (f *File) SetSheetViewOptions(name string, viewIndex int, opts ...SheetViewOption) error {
+	xlsx := f.workSheetReader(name)
+	if viewIndex < 0 {
+		if viewIndex < -len(xlsx.SheetViews.SheetView) {
+			return fmt.Errorf("view index %d out of range", viewIndex)
+		}
+		viewIndex = len(xlsx.SheetViews.SheetView) + viewIndex
+	} else if viewIndex >= len(xlsx.SheetViews.SheetView) {
+		return fmt.Errorf("view index %d out of range", viewIndex)
+	}
+
+	view := &(xlsx.SheetViews.SheetView[viewIndex])
+	for _, opt := range opts {
+		opt.applyOption(view)
+	}
+	return nil
 }
