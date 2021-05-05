@@ -160,3 +160,12 @@ func (f *File) WriteToBuffer() (*bytes.Buffer, error) {
 	}
 	return buf, zw.Close()
 }
+
+// MarshalBinary implements interface encoding.BinaryMarshaler.
+func (f *File) MarshalBinary() ([]byte, error) {
+	buf, err := f.WriteToBuffer()
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}

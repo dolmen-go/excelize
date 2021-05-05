@@ -3,11 +3,14 @@ package excelize
 import (
 	"bufio"
 	"bytes"
+	"encoding"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+var _ encoding.BinaryMarshaler = (*File)(nil)
 
 func BenchmarkWrite(b *testing.B) {
 	const s = "This is test data"
